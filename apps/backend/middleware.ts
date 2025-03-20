@@ -31,6 +31,7 @@ export async function authMiddleware(
     console.log("Received token:", token);
 
     // Get the JWT verification key from environment variable
+    console.log("process.env is", process.env);
     const publicKey = process.env.CLERK_JWT_PUBLIC_KEY!;
 
     if (!publicKey) {

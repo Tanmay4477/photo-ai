@@ -9,10 +9,10 @@ import { prismaClient } from "db";
 import { S3Client } from "bun";
 import { FalAIModel } from "./models/FalAIModel";
 import cors from "cors";
-import { authMiddleware } from "./middleware";
+// import { authMiddleware } from "./middleware";
 import dotenv from "dotenv";
 
-import paymentRoutes from "./routes/payment.routes";
+// import paymentRoutes from "./routes/payment.routes";
 import { router as webhookRouter } from "./routes/webhook.routes";
 
 const IMAGE_GEN_CREDITS = 1;
@@ -53,7 +53,23 @@ app.get("/pre-signed-url", async (req, res) => {
   });
 });
 
-app.post("/ai/training", authMiddleware, async (req, res) => {
+app.get("/", async (req, res) => {
+  try {
+    res.status(200).json({
+      message: "All setup successfully",
+      success: true
+    });
+    return;
+  } catch (error) {
+    console.log("Error in the main route, project not initialized correctly");
+    res.status(500).json({
+      message: "Project not setup correctly",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+});
+
+app.post("/ai/training", async (req, res) => {
   try {
     const parsedBody = TrainModel.safeParse(req.body);
     if (!parsedBody.success) {
@@ -95,7 +111,7 @@ app.post("/ai/training", authMiddleware, async (req, res) => {
   }
 });
 
-app.post("/ai/generate", authMiddleware, async (req, res) => {
+app.post("/ai/generate", async (req, res) => {
   const parsedBody = GenerateImage.safeParse(req.body);
 
   if (!parsedBody.success) {
@@ -158,7 +174,7 @@ app.post("/ai/generate", authMiddleware, async (req, res) => {
   });
 });
 
-app.post("/pack/generate", authMiddleware, async (req, res) => {
+app.post("/pack/generate", async (req, res) => {
   const parsedBody = GenerateImagesFromPack.safeParse(req.body);
 
   if (!parsedBody.success) {
@@ -239,7 +255,7 @@ app.get("/pack/bulk", async (req, res) => {
   });
 });
 
-app.get("/image/bulk", authMiddleware, async (req, res) => {
+app.get("/image/bulk", async (req, res) => {
   const ids = req.query.ids as string[];
   const limit = (req.query.limit as string) ?? "100";
   const offset = (req.query.offset as string) ?? "0";
@@ -264,7 +280,7 @@ app.get("/image/bulk", authMiddleware, async (req, res) => {
   });
 });
 
-app.get("/models", authMiddleware, async (req, res) => {
+app.get("/models", async (req, res) => {
   const models = await prismaClient.model.findMany({
     where: {
       OR: [{ userId: req.userId }, { open: true }],
@@ -441,7 +457,7 @@ app.post("/fal-ai/webhook/image", async (req, res) => {
   });
 });
 
-app.get("/model/status/:modelId", authMiddleware, async (req, res) => {
+app.get("/model/status/:modelId", async (req, res) => {
   try {
     const modelId = req.params.modelId;
 
@@ -483,7 +499,7 @@ app.get("/model/status/:modelId", authMiddleware, async (req, res) => {
   }
 });
 
-app.use("/payment", paymentRoutes);
+// app.use("/payment", paymentRoutes);
 app.use("/api/webhook", webhookRouter);
 
 app.listen(PORT, () => {
